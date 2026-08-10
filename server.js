@@ -20,7 +20,7 @@ app.get('/', (_req, res) => {
 });
 
 // API Routes
-app.use('api/v1', v1Routes);
+app.use('/api/v1', v1Routes);
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 app.use(errorHandler);

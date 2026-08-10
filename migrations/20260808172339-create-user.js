@@ -33,12 +33,7 @@ module.exports = {
         allowNull: false
       },
       salary: {
-        type: DataTypes.DECIMAL(10, 2),
-        allowNull: true,
-        validate: {
-          isDecimal: true,
-          min: 0,
-        },
+        type: Sequelize.STRING
       },
       createdAt: {
         allowNull: false,
