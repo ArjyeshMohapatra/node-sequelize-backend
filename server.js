@@ -1,13 +1,18 @@
 const express = require('express');
 const { sequelize } = require('./models');
-const userRoutes = require('./routes/userRoutes');
-const authRoutes = require('./routes/authRoutes');
 const errorHandler = require('./middlewares/errorHandler');
 const swaggerUi = require('swagger-ui-express');
 const swaggerSpec = require('./config/swagger');
+const helmet = require('helmet');
+const cors = require('cors');
+const v1Routes = require('./routes/v1');
 
 const app = express();
 app.use(express.json());
+app.use(cors());
+app.use(helmet({
+    hsts: process.env.NODE_ENV === 'production',
+}));
 
 // Health check route
 app.get('/', (_req, res) => {
@@ -15,8 +20,7 @@ app.get('/', (_req, res) => {
 });
 
 // API Routes
-app.use('/api/v1/auth', authRoutes);
-app.use('/api/v1/users', userRoutes);
+app.use('api/v1', v1Routes);
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 app.use(errorHandler);

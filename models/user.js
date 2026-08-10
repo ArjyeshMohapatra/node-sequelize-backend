@@ -20,7 +20,14 @@ module.exports = (sequelize, DataTypes) => {
     phone_no: DataTypes.STRING,
     address: DataTypes.STRING,
     status: DataTypes.ENUM('active', 'inactive'),
-    salary: DataTypes.STRING
+    salary: {
+      type: DataTypes.DECIMAL(10, 2),
+      allowNull: true,
+      validate: {
+        isDecimal: true,
+        min: 0,
+      },
+    },
   }, {
     sequelize,
     modelName: 'User',

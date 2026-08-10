@@ -10,6 +10,7 @@ module.exports = {
     dialect: process.env.DB_DIALECT,
     access_secret: process.env.ACCESS_SECRET,
     refresh_secret: process.env.REFRESH_SECRET,
+    log_level: process.env.LOG_LEVEL,
   },
   test: {
     username: process.env.DB_USERNAME,
@@ -20,6 +21,7 @@ module.exports = {
     dialect: process.env.DB_DIALECT,
     access_secret: process.env.ACCESS_SECRET,
     refresh_secret: process.env.REFRESH_SECRET,
+    log_level: process.env.LOG_LEVEL,
   },
   production: {
     username: process.env.DB_USERNAME,
@@ -30,5 +32,6 @@ module.exports = {
     dialect: process.env.DB_DIALECT,
     access_secret: process.env.ACCESS_SECRET,
     refresh_secret: process.env.REFRESH_SECRET,
+    log_level: process.env.LOG_LEVEL,
   }
 };

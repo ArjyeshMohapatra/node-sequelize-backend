@@ -1,7 +1,10 @@
 const express = require('express');
 const router = express.Router();
-const authController = require('../controllers/authController');
-const authenticate = require('../middlewares/authMiddleware');
+const validate = require('../../middlewares/validate');
+const { authLimiter } = require('../../middlewares/rateLimiter');
+const { registerSchema, loginSchema, refreshTokenSchema } = require('../../validators/authValidator');
+const authController = require('../../controllers/authController');
+const authenticate = require('../../middlewares/authMiddleware');
 
 /**
  * @swagger
@@ -49,7 +52,7 @@ const authenticate = require('../middlewares/authMiddleware');
  *                 enum: [active, inactive]
  *                 example: active
  *               salary:
- *                 type: string
+ *                 type: number
  *                 example: "95000"
  *     responses:
  *       201:
@@ -57,7 +60,7 @@ const authenticate = require('../middlewares/authMiddleware');
  *       400:
  *         description: Email already registered or invalid input
  */
-router.post('/signup', authController.register);
+router.post('/signup', authLimiter, validate(registerSchema), authController.register);
 
 /**
  * @swagger
@@ -87,7 +90,7 @@ router.post('/signup', authController.register);
  *       401:
  *         description: Invalid email or password
  */
-router.post('/signin', authController.login);
+router.post('/signin', authLimiter, validate(loginSchema), authController.login);
 
 /**
  * @swagger
@@ -113,7 +116,7 @@ router.post('/signin', authController.login);
  *       403:
  *         description: Invalid, expired, or revoked refresh token
  */
-router.post('/refresh-token', authController.refreshToken);
+router.post('/refresh-token',authLimiter, validate(refreshTokenSchema), authController.refreshToken);
 
 /**
  * @swagger
@@ -129,7 +132,7 @@ router.post('/refresh-token', authController.refreshToken);
  *       401:
  *         description: Unauthorized / Token missing or invalid
  */
-router.post('/logout', authenticate, authController.logout);
+router.post('/logout', authLimiter, authenticate, authController.logout);
 
 /**
  * @swagger
@@ -145,6 +148,6 @@ router.post('/logout', authenticate, authController.logout);
  *       401:
  *         description: Unauthorized / Token missing or invalid
  */
-router.delete('/delete-account', authenticate, authController.deleteAccount);
+router.delete('/delete-account',authLimiter, authenticate, authController.deleteAccount);
 
 module.exports = router;
