@@ -1,10 +1,11 @@
 const { verifyAccessToken } = require('../utils/jwtHelper');
+const ApiError = require('../utils/apiError');
 
 const authenticate = (req, res, next) => {
   const authHeader = req.headers.authorization;
 
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return res.status(401).json({ error: 'Unauthorized: Missing token' });
+    return next(new ApiError(401, 'Unauthorized: Missing token'));
   }
 
   const token = authHeader.split(' ')[1];
@@ -13,8 +14,8 @@ const authenticate = (req, res, next) => {
     const decoded = verifyAccessToken(token);
     req.user = decoded; // Contains id and email
     next();
-  } catch (error) {
-    return res.status(401).json({ error: 'Unauthorized: Invalid or expired access token' });
+  } catch (_error) {
+    return next(new ApiError(401, 'Unauthorized: Invalid or expired access token'));
   }
 };
 

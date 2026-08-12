@@ -11,11 +11,12 @@ class AuthService {
             throw error;
         }
 
+        const { password, ...userFields } = userData;
         return await sequelize.transaction(async (t) => {
-            const hashedPassword = await bcrypt.hash(userData.password, 10);
+            const hashedPassword = await bcrypt.hash(password, 10);
       
             // 1. Create main User record
-            const user = await User.create(userData, { transaction: t });
+            const user = await User.create(userFields, { transaction: t });
       
             // 2. Create linked UserAuthentication record
             const authRecord = await UserAuthentication.create(
@@ -71,10 +72,10 @@ class AuthService {
       }
 
     async logout(userId) {
-        const user = await User.findByPk(userId);
-        if (user) {
-            user.refresh_token = null;
-            await user.save();
+        const authRecord = await UserAuthentication.findOne({ where: { user_id: userId } });
+        if (authRecord) {
+          authRecord.refresh_token = null;
+          await authRecord.save();
         }
     }
     
@@ -92,27 +93,29 @@ class AuthService {
     async rotateTokens(incomingRefreshToken) {
         let decoded;
         try {
-        decoded = verifyRefreshToken(incomingRefreshToken);
+            decoded = verifyRefreshToken(incomingRefreshToken);
         } catch (_err) {
-        const error = new Error('Invalid or expired refresh token');
-        error.statusCode = 403;
-        throw error;
+            const error = new Error('Invalid or expired refresh token');
+            error.statusCode = 403;
+            throw error;
+        }
+
+        const authRecord = await UserAuthentication.findOne({ where: { user_id: decoded.id } });
+        if (!authRecord || authRecord.refresh_token !== incomingRefreshToken) {
+          const error = new Error('Invalid refresh token (Already used or revoked)');
+          error.statusCode = 403;
+          throw error;
         }
 
         const user = await User.findByPk(decoded.id);
-        if (!user || user.refresh_token !== incomingRefreshToken) {
-        const error = new Error('Invalid refresh token (Already used or revoked)');
-        error.statusCode = 403;
-        throw error;
-        }
 
         // Issue NEW pair of access & refresh tokens
         const newAccessToken = generateAccessToken(user);
         const newRefreshToken = generateRefreshToken(user);
 
         // Overwrite old refresh token in database (Rotation)
-        user.refresh_token = newRefreshToken;
-        await user.save();
+        authRecord.refresh_token = newRefreshToken;
+        await authRecord.save();
 
         return { accessToken: newAccessToken, refreshToken: newRefreshToken };
     }

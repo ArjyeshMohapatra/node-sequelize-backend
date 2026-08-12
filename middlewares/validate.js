@@ -1,3 +1,4 @@
+
 const validate = (schema) => (req, res, next)  => {
     try {
         schema.parse({
@@ -7,7 +8,7 @@ const validate = (schema) => (req, res, next)  => {
         });
         next();
     } catch (error) {
-        return res.status(400).json({ status: 'fail', errors: error.errors });
+        next(error);
     }
 };
 
