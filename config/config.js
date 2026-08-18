@@ -11,6 +11,7 @@ module.exports = {
     access_secret: process.env.ACCESS_SECRET,
     refresh_secret: process.env.REFRESH_SECRET,
     log_level: process.env.LOG_LEVEL,
+    client_url : process.env.DEV_CLIENT_URL,
   },
   test: {
     username: process.env.DB_USERNAME,
@@ -22,6 +23,7 @@ module.exports = {
     access_secret: process.env.ACCESS_SECRET,
     refresh_secret: process.env.REFRESH_SECRET,
     log_level: process.env.LOG_LEVEL,
+    client_url : process.env.TEST_CLIENT_URL,
   },
   production: {
     username: process.env.DB_USERNAME,
@@ -33,5 +35,6 @@ module.exports = {
     access_secret: process.env.ACCESS_SECRET,
     refresh_secret: process.env.REFRESH_SECRET,
     log_level: process.env.LOG_LEVEL,
+    client_url : process.env.PROD_CLIENT_URL,
   }
 };

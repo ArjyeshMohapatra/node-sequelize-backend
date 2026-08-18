@@ -11,9 +11,10 @@ class AuthService {
             throw error;
         }
 
+        const salt = await bcrypt.genSalt(10);
         const { password, ...userFields } = userData;
         return await sequelize.transaction(async (t) => {
-            const hashedPassword = await bcrypt.hash(password, 10);
+            const hashedPassword = await bcrypt.hash(password, salt);
       
             // 1. Create main User record
             const user = await User.create(userFields, { transaction: t });
@@ -29,9 +30,11 @@ class AuthService {
       
             const accessToken = generateAccessToken(user);
             const refreshToken = generateRefreshToken(user);
+
+            const hashedRefreshToken = await bcrypt.hash(refreshToken, salt);
       
             // 3. Save refresh token
-            authRecord.refresh_token = refreshToken;
+            authRecord.refresh_token = hashedRefreshToken;
             await authRecord.save({ transaction: t });
       
             return { user, accessToken, refreshToken };
@@ -64,8 +67,11 @@ class AuthService {
     
         const accessToken = generateAccessToken(user);
         const refreshToken = generateRefreshToken(user);
+
+        const salt = bcrypt.genSalt(10);
+        const hashedRefreshToken = bcrypt.hash(refreshToken, salt);
     
-        user.authentication.refresh_token = refreshToken;
+        user.authentication.refresh_token = hashedRefreshToken;
         await user.authentication.save();
     
         return { user, accessToken, refreshToken };
@@ -101,10 +107,9 @@ class AuthService {
         }
 
         const authRecord = await UserAuthentication.findOne({ where: { user_id: decoded.id } });
-        if (!authRecord || authRecord.refresh_token !== incomingRefreshToken) {
-          const error = new Error('Invalid refresh token (Already used or revoked)');
-          error.statusCode = 403;
-          throw error;
+        const isTokenValid = await bcrypt.compare(incomingRefreshToken, authRecord.refresh_token);
+        if (!authRecord || authRecord.refresh_token !== incomingRefreshToken || !isTokenValid) {
+          throw new ApiError(403, 'Invalid refresh token (Already used or revoked)');
         }
 
         const user = await User.findByPk(decoded.id);
@@ -113,8 +118,11 @@ class AuthService {
         const newAccessToken = generateAccessToken(user);
         const newRefreshToken = generateRefreshToken(user);
 
+        const salt = bcrypt.genSalt(10);
+        const newHashedRefreshToken = await bcrypt.hash(newRefreshToken, salt);
+
         // Overwrite old refresh token in database (Rotation)
-        authRecord.refresh_token = newRefreshToken;
+        authRecord.refresh_token = newHashedRefreshToken;
         await authRecord.save();
 
         return { accessToken: newAccessToken, refreshToken: newRefreshToken };

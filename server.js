@@ -6,10 +6,15 @@ const swaggerSpec = require('./config/swagger');
 const helmet = require('helmet');
 const cors = require('cors');
 const v1Routes = require('./routes/v1');
+const config = require('./config/config');
 
 const app = express();
 app.use(express.json());
-app.use(cors());
+app.use(cors({
+    origin: config[process.env.NODE_ENV].client_url,
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+}));
 app.use(helmet({
     hsts: process.env.NODE_ENV === 'production',
 }));
@@ -41,3 +46,15 @@ async function startServer() {
 }
 
 startServer();
+
+const shutdown = async () => {
+    console.log('Closing HTTP server and database connection...');
+    server.close(async () => {
+        await sequelize.close();
+        console.log('Cleanup finished. Exiting process.');
+        process.exit(0);
+    });
+};
+
+process.on('SIGTERM', shutdown);
+process.on('SIGINT', shutdown);
